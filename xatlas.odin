@@ -133,7 +133,7 @@ ChartOptions :: struct
     maxChartArea: f32,  // Don't grow charts to be larger than this. 0 means no limit.
     maxBoundaryLength: f32,  // Don't grow charts to have a longer boundary than this. 0 means no limit.
 
-	// Weights determine chart growth. Higher weights mean higher cost for that metric.
+    // Weights determine chart growth. Higher weights mean higher cost for that metric.
     normalDeviationWeight: f32,  // default: 2.0, Angle between face and average chart normal.
     roundnessWeight: f32,  // default: 0.01
     straightnessWeight: f32,  // default: 6.0
@@ -149,23 +149,23 @@ ChartOptions :: struct
 
 PackOptions :: struct
 {
-	// Charts larger than this will be scaled down. 0 means no limit.
+    // Charts larger than this will be scaled down. 0 means no limit.
     maxChartSize: u32,
 
-	// Number of pixels to pad charts with.
+    // Number of pixels to pad charts with.
     padding: u32,
 
-	// Unit to texel scale. e.g. a 1x1 quad with texelsPerUnit of 32 will take up approximately 32x32 texels in the atlas.
-	// If 0, an estimated value will be calculated to approximately match the given resolution.
-	// If resolution is also 0, the estimated value will approximately match a 1024x1024 atlas.
+    // Unit to texel scale. e.g. a 1x1 quad with texelsPerUnit of 32 will take up approximately 32x32 texels in the atlas.
+    // If 0, an estimated value will be calculated to approximately match the given resolution.
+    // If resolution is also 0, the estimated value will approximately match a 1024x1024 atlas.
     texelsPerUnit: f32,
 
-	// If 0, generate a single atlas with texelsPerUnit determining the final resolution.
-	// If not 0, and texelsPerUnit is not 0, generate one or more atlases with that exact resolution.
-	// If not 0, and texelsPerUnit is 0, texelsPerUnit is estimated to approximately match the resolution.
+    // If 0, generate a single atlas with texelsPerUnit determining the final resolution.
+    // If not 0, and texelsPerUnit is not 0, generate one or more atlases with that exact resolution.
+    // If not 0, and texelsPerUnit is 0, texelsPerUnit is estimated to approximately match the resolution.
     resolution: u32,
 
-	// Leave space around charts for texels that would be sampled by bilinear filtering.
+    // Leave space around charts for texels that would be sampled by bilinear filtering.
     bilinear: c.bool,  // default: true
 
     // Align charts to 4x4 blocks. Also improves packing speed, since there are fewer possible chart locations to consider.
@@ -203,7 +203,20 @@ FreeFunc :: #type proc "c"(ptr: rawptr)
 // Custom print function.
 PrintFunc :: #type proc "c"(str: cstring, #c_vararg args: ..any) -> c.int
 
-foreign import xatlas_clib "xatlas.lib"
+@(private)
+LIB :: (
+         "xatlas.lib" when ODIN_OS == .Windows
+    else "xatlas.o"   when ODIN_OS == .Linux
+    else ""
+)
+
+when LIB != "" {
+    when !#exists(LIB) {
+        #panic("Could not find the compiled XAtlas library.")
+    }
+}
+
+foreign import xatlas_clib { LIB }
 
 @(default_calling_convention="c", link_prefix="xatlas")
 foreign xatlas_clib
